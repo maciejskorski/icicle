@@ -19,7 +19,7 @@ jobs:
       - name: Check for NVCC
         run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
       - name: Check mount 
-        run: ls -a /home/icicle
+        run: ls -a /home/
       - name: Build and test CUDA code
         run: |
           cd /home/
