@@ -22,7 +22,7 @@ jobs:
       - name: Build and test CUDA code
         run: |
           cd /home/icicle
-          mkdir -p build
+          sudo mkdir -p build
           cmake -S . -B build
           cmake --build build
           cd build && ctest
