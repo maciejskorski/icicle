@@ -7,3 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/maciejskorski/icicle:latest
+    steps:
+      - name: Check for NVCC
+        run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
