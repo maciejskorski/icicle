@@ -10,6 +10,15 @@ jobs:
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+      volumes:
+      - ./icicle:/home/icicle
     steps:
       - name: Check for NVCC
         run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
+      - name: Build and test CUDA code
+        run: |
+          cd /home/icicle
+          mkdir -p build
+          cmake -S . -B build
+          cmake --build build
+          cd build && ctest
