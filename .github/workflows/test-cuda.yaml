@@ -11,17 +11,17 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       volumes:
-      - ./icicle:/home/icicle
+      - ./icicle:/home/
+      options: --user root
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check for NVCC
         run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
-      - name: Check mount
-        run: ls -a /home/icicle
+      - name: Check mount ls -a /home/icicle
       - name: Build and test CUDA code
         run: |
-          cd /home/icicle
+          cd /home/
           sudo mkdir -p build
           cmake -S . -B build
           cmake --build build
