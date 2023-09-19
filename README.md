@@ -43,6 +43,8 @@ ICICLE is a CUDA implementation of general functions widely used in ZKP. ICICLE 
 - [NVCC]
 - cmake 3.18 and above
 
+The [Dockerifle](./Dockerfile) can be used to build and test CUDA primitives.
+
 ### Steps
 
 1. Define or select a curve for your application; we've provided a [template][CRV_TEMPLATE] for defining a curve
