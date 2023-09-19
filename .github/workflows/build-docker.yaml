@@ -1,3 +1,5 @@
+name: build-docker
+
 on: [workflow_dispatch]
 
 jobs:
