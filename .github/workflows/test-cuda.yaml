@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: investigate
+        run: |
+          pwd
+          whoami
+          ls -la
+          id -u
       - name: Check for NVCC
         run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
       - name: Check mount 
