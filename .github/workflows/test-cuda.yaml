@@ -1,0 +1,10 @@
+on: [workflow_dispatch]
+
+jobs:
+  build_test_cuda:
+    runs-on: ubuntu-latest
+    name: Build and test CUDA code
+    steps:
+      - name: Build and test CUDA
+        id: hello
+        uses: actions/build_action@v1
