@@ -1,10 +1,12 @@
 on: [workflow_dispatch]
 
 jobs:
-  build_test_cuda:
+  hello_world_job:
     runs-on: ubuntu-latest
-    name: Build and test CUDA code
+    name: A job to say hello
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Build and test CUDA
-        id: hello
-        uses: actions/build_action@v1
+        uses: ./build_action
+        id: build
