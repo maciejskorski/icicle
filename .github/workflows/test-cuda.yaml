@@ -8,5 +8,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build and test CUDA
-        uses: ./build_action
+        uses: ./build_action/
         id: build
