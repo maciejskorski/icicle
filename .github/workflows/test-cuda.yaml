@@ -1,0 +1,9 @@
+name: test-cuda
+
+on: [workflow_dispatch]
+
+jobs:
+  container-test-job:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/maciejskorski/icicle:latest
