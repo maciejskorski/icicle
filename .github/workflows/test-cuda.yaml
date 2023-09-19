@@ -28,7 +28,7 @@ jobs:
         run: ls -a /home/
       - name: Build and test CUDA code
         run: |
-          cd /home
+          cd icicle
           mkdir -p build
           cmake -S . -B build
           cmake --build build
