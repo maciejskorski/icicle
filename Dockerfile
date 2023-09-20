@@ -4,12 +4,15 @@ FROM nvidia/cuda:12.2.0-devel-ubuntu20.04
 
 # install package dependencies
 RUN apt-get update && apt-get install -y \
-    wget build-essential libssl-dev
+    wget build-essential libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # install cmake
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.26.5/cmake-3.26.5-linux-x86_64.tar.gz -o cmake.tar.gz && \
-    tar xf cmake-3.26.5-linux-x86_64.tar.gz && \
-    mv cmake-3.26.5-linux-x86_64 /opt/ && \
-    ln -s /opt/cmake-3.26.5-linux-x86_64/bin/* /usr/local/bin
+RUN wget https://cmake.org/files/v3.23/cmake-3.23.0-linux-x86_64.tar.gz -O cmake.tar.gz && \
+    mkdir -p /opt/cmake && \
+    tar -xf cmake.tar.gz --directory opt/cmake && \
+    rm cmake.tar.gz && \
+    ln -s /opt/cmake/cmake-3.23*/bin/* /usr/local/bin
+
 
 CMD ["bash"]
