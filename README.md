@@ -1,5 +1,5 @@
 ![Docker build](https://github.com/maciejskorski/icicle/actions/workflows/build-docker.yaml/badge.svg)
-![CUDA build](https://github.com/maciejskorski/icicle/actions/workflows/test-cuda.yaml/badge.svg)
+![CUDA build](https://github.com/maciejskorski/icicle/actions/workflows/build-cuda.yaml/badge.svg)
 
 
 # ICICLE
