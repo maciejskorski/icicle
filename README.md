@@ -47,7 +47,16 @@ ICICLE is a CUDA implementation of general functions widely used in ZKP. ICICLE 
 - [NVCC]
 - cmake 3.18 and above
 
-The [Dockerifle](./Dockerfile) can be used to build and test CUDA primitives.
+The [Dockerifle](./Dockerfile) can be used to build and test CUDA primitives. Run a container as follows:
+```bash
+docker run -d \
+   -it \
+   --name icicle \
+   --runtime=nvidia \
+   --mount type=bind,source=$(pwd),target=/home \
+   --privileged \
+   icicle:latest
+```
 
 ### Steps
 
