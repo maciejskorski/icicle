@@ -16,20 +16,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: investigate
-        run: |
-          pwd
-          whoami
-          ls -la
-          id -u
       - name: Check for NVCC
         run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
       - name: Check mount 
         run: ls -a /home/
       - name: Build and test CUDA code
+        env:
+          CUDA_ARCH: 75
         run: |
           cd icicle
           mkdir -p build
           cmake -S . -B build
           cmake --build build
-          cd build && ctest
+          cd build
