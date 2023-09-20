@@ -1,7 +1,9 @@
+name: build-docker
+
 on: [workflow_dispatch]
 
 jobs:
-  docker:
+  build-docker:
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub

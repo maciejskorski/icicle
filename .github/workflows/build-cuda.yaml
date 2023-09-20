@@ -1,0 +1,31 @@
+name: build-cuda
+
+on: [workflow_dispatch]
+
+jobs:
+  container-test-job:
+    runs-on: ubuntu-latest
+    container:
+      image: maciejskorski/icicle:latest
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      volumes:
+      - ${{ github.workspace }}/icicle:/home
+      options: --user root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check for NVCC
+        run: (ls nvcc --version && echo Found nvcc) || (echo No nvcc)
+      - name: Check mount 
+        run: ls -a /home/
+      - name: Build and test CUDA code
+        env:
+          CUDA_ARCH: 75
+        run: |
+          cd icicle
+          mkdir -p build
+          cmake -S . -B build
+          cmake --build build
+          cd build

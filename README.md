@@ -1,3 +1,7 @@
+![Docker build](https://github.com/maciejskorski/icicle/actions/workflows/test-cuda.yaml/badge.svg)
+![CUDA build](https://github.com/maciejskorski/icicle/actions/workflows/build-docker.yaml/badge.svg)
+
+
 # ICICLE
  **<div align="center">Icicle is a library for ZK acceleration using CUDA-enabled GPUs.</div>**
 
