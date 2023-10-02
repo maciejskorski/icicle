@@ -1,12 +1,16 @@
 // nvcc -arch=sm_70 -std=c++17 -c wrappers.cu -o wrappers.o
-// nvcc -arch=sm_70 -std=c++17 wrappers.o ./benchmark.cu -o benchmark && ./benchmark
+// nvcc -arch=sm_70 -std=c++17 -lnvidia-ml wrappers.o ./benchmark.cu -o benchmark && ./benchmark 
+
 
 #include "../../../curves/bls12_381/curve_config.cuh"
 using namespace BLS12_381;
 
 #include <iostream>
 #include <fstream>
+#include <nvml.h>
+
 using namespace std;
+
 
 // msm function header here, body defined in wrappers.cu
 void msm_wrapper(
@@ -17,6 +21,7 @@ void msm_wrapper(
     unsigned large_bucket_factor=1,
     cudaStream_t stream=0
 );
+
 
 #define CHECK_LAST_CUDA_ERROR() checkLast(__FILE__, __LINE__)
 void checkLast(const char* const file, const int line)
@@ -59,13 +64,12 @@ tuple<scalar_t*, affine_t*> readData(unsigned N) {
     return make_tuple(scalars,points);
 }
 
-
 int main()
 {
     printf("Starting benchmark...\n");
     unsigned batch_size = 1;
     unsigned large_bucket_factor = 20; // FIXME: runtime errors for some values of this hyperparam
-    unsigned msm_size = 1<<25;
+    unsigned msm_size = 1<<15;
     msm_size = msm_size;
     unsigned N = batch_size * msm_size;
 
@@ -83,7 +87,7 @@ int main()
     scalar_t* sample_scalars = new scalar_t[N];
     affine_t* sample_points = new affine_t[N];
     // pseudo-random hack for speedup
-    unsigned N_PRESAMPLED = 10000;
+    unsigned N_PRESAMPLED = 100000;
     tie(sample_scalars,sample_points) = readData(N_PRESAMPLED); 
     for (unsigned i = 0; i < N; i++) {
         scalars[i] = sample_scalars[i%N_PRESAMPLED];
@@ -92,16 +96,60 @@ int main()
     };
 
     printf("Host: Computing MSM...\n");
-    cudaMalloc(&scalars_d, sizeof(scalar_t) * N);
-    cudaMalloc(&points_d, sizeof(affine_t) * N);
-    cudaMalloc(&out_d, sizeof(projective_t));
-    cudaMemcpy(scalars_d, scalars, sizeof(scalar_t) * N, cudaMemcpyHostToDevice);
-    cudaMemcpy(points_d, points, sizeof(affine_t) * N, cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-    CHECK_LAST_CUDA_ERROR();
-    msm_wrapper(scalars_d,points_d,out_d, N, large_bucket_factor, 0);;
-    cudaDeviceSynchronize();
-    CHECK_LAST_CUDA_ERROR();
+
+    // initialize NVML objects for profiling
+    nvmlReturn_t status;
+    nvmlDevice_t device_handle;
+    unsigned long long energy_start, energy_end;
+    long long energy_total;
+    cudaEvent_t time_start, time_stop;
+    float time_total;
+    unsigned int memClock;
+    unsigned int ClockFreqNumber=200;
+    unsigned int ClockFreqs[200];
+    cudaEventCreate(&time_start);
+    cudaEventCreate(&time_stop);
+    nvmlInit();
+    nvmlDeviceGetHandleByIndex(0, &device_handle);
+    nvmlDeviceGetApplicationsClock(device_handle, NVML_CLOCK_MEM, &memClock);
+    printf("Memory clock is %d\n",memClock);
+    //test(&ClockFreqs);
+    nvmlDeviceGetSupportedGraphicsClocks(device_handle, memClock, &ClockFreqNumber, ClockFreqs );
+    for (int i = 0; i < 187; i++) {
+        unsigned int freq = ClockFreqs[i];
+        status = nvmlDeviceSetApplicationsClocks(device_handle, memClock, freq);
+
+        // copy data to device
+        cudaMalloc(&scalars_d, sizeof(scalar_t) * N);
+        cudaMalloc(&points_d, sizeof(affine_t) * N);
+        cudaMalloc(&out_d, sizeof(projective_t));
+        cudaMemcpy(scalars_d, scalars, sizeof(scalar_t) * N, cudaMemcpyHostToDevice);
+        cudaMemcpy(points_d, points, sizeof(affine_t) * N, cudaMemcpyHostToDevice);
+        cudaDeviceSynchronize();
+        CHECK_LAST_CUDA_ERROR();
+
+        // profile
+        for (int i = 0; i < 5; i++) {
+            // start profiling
+            cudaEventRecord(time_start, 0);
+            nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_start);
+            // profiled code
+            msm_wrapper(scalars_d,points_d,out_d, N, large_bucket_factor, 0);
+            cudaDeviceSynchronize();
+            // end profiling
+            cudaEventRecord(time_stop, 0);
+            cudaEventSynchronize(time_stop);
+            cudaEventElapsedTime(&time_total, time_start, time_stop);
+            nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_end);
+            energy_total=energy_end-energy_start;
+            CHECK_LAST_CUDA_ERROR();
+            printf("Freq=%d,Time=%f [ms],Energy=%lld [mJ] \n ",freq,time_total, energy_total);
+        };
+    };
+
+
+    nvmlDeviceResetApplicationsClocks(device_handle);
+    nvmlShutdown();
     //cudaMemcpy(out, out_d, sizeof(projective_t), cudaMemcpyDeviceToHost);
     //std::cout << projective_t::to_affine(out[0]) << std::endl;
 }
