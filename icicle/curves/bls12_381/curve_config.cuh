@@ -12,7 +12,7 @@ namespace BLS12_381 {
   typedef Field<PARAMS_BLS12_381::fp_config> scalar_field_t;
   typedef scalar_field_t scalar_t;
   typedef Field<PARAMS_BLS12_381::fq_config> point_field_t;
-  static constexpr point_field_t b = point_field_t{PARAMS_BLS12_381::weierstrass_b};
+  inline constexpr point_field_t b = point_field_t{PARAMS_BLS12_381::weierstrass_b};
   typedef Projective<point_field_t, scalar_field_t, b> projective_t;
   typedef Affine<point_field_t> affine_t;
 #if defined(G2_DEFINED)
