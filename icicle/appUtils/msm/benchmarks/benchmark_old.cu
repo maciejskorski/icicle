@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
     scalar_t* sample_scalars = new scalar_t[N];
     affine_t* sample_points = new affine_t[N];
     // pseudo-random hack for speedup
-    unsigned N_PRESAMPLED = 512*32;
+    unsigned N_PRESAMPLED = 100000;
     tie(sample_scalars,sample_points) = readData(N_PRESAMPLED); 
     for (unsigned i = 0; i < N; i++) {
         scalars[i] = sample_scalars[i%N_PRESAMPLED];
         points[i] = sample_points[i%N_PRESAMPLED]; 
 
     };
-    // copy data to device and warm-up the code
+    // copy data to device and warm-up
     cudaMalloc(&scalars_d, sizeof(scalar_t) * N);
     cudaMalloc(&points_d, sizeof(affine_t) * N);
     cudaMalloc(&out_d, sizeof(projective_t));
@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
     printf("Computing MSM...\n");
 
     // initialize NVML objects for profiling
+    nvmlReturn_t status;
     nvmlDevice_t device_handle;
     unsigned long long energy_start, energy_end;
     long long energy_total;
@@ -128,21 +129,30 @@ int main(int argc, char *argv[])
     nvmlDeviceGetSupportedGraphicsClocks(device_handle, memClock, &ClockFreqNumber, ClockFreqs );
 
     // run and profile code on device
-    for (int i = 0; i < 5; i++) {
-        cudaEventRecord(time_start, 0);
-        nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_start);
+    for (int i = 0; i < ClockFreqNumber; i++) {
+        unsigned int freq = ClockFreqs[i];
+        status = nvmlDeviceSetApplicationsClocks(device_handle, memClock, freq);
+        usleep(100);
+        for (int i = 0; i < 5; i++) {
+            // start profiling
+            cudaEventRecord(time_start, 0);
+            nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_start);
+            // profiled code
+            msm_wrapper(scalars_d,points_d,out_d, N, large_bucket_factor, 0);
+            cudaDeviceSynchronize();
+            // end profiling
+            cudaEventRecord(time_stop, 0);
+            cudaEventSynchronize(time_stop);
+            cudaEventElapsedTime(&time_total, time_start, time_stop);
+            nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_end);
+            energy_total=energy_end-energy_start;
+            CHECK_LAST_CUDA_ERROR();
+            printf("Param=%d,Freq=%d,Time=%f [ms],Energy=%lld [mJ]\n", log_msm_size, freq,time_total, energy_total);
+        };
+    };
 
-        msm_wrapper(scalars_d,points_d,out_d, N, large_bucket_factor, 0);
-        cudaDeviceSynchronize();
 
-        cudaEventRecord(time_stop, 0);
-        cudaEventSynchronize(time_stop);
-        cudaEventElapsedTime(&time_total, time_start, time_stop);
-        nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_end);
-        CHECK_LAST_CUDA_ERROR();
-        energy_total=energy_end-energy_start;
-        printf("Param=%d,Time=%f [ms],Energy=%lld [mJ]\n",log_msm_size,time_total, energy_total);
-    }
+    nvmlDeviceResetApplicationsClocks(device_handle);
     nvmlShutdown();
     //cudaMemcpy(out, out_d, sizeof(projective_t), cudaMemcpyDeviceToHost);
     //std::cout << projective_t::to_affine(out[0]) << std::endl;
