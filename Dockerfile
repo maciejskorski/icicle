@@ -4,7 +4,7 @@ FROM nvidia/cuda:12.2.0-devel-ubuntu20.04
 
 # install package dependencies
 RUN apt-get update && apt-get install -y \
-    wget build-essential libssl-dev \
+    wget build-essential libssl-dev gawk \
     && rm -rf /var/lib/apt/lists/*
 
 # install cmake
