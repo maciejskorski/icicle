@@ -42,6 +42,22 @@ ICICLE is a CUDA implementation of general functions widely used in ZKP. ICICLE 
 ## Build and usage
 
 
+## Energy Benchmarks
+
+Build the container image using the [Dockerifle](./Dockerfile) by `docker build -t icicle:latest .`.
+
+Then, run the container mounting the root repository directory
+```bash
+docker run -d \
+   -it \
+   --name icicle \
+   --runtime=nvidia \
+   --mount type=bind,source=$(pwd),target=/home \
+   --privileged \
+   icicle:latest
+```
+Inside the container, go to `/home/icicle/appUtils/msm/benchmarks` and run `make`. The benchmark application compiles as `benchmark`.
+
 ### Prerequisites
 
 - [NVCC]

@@ -116,16 +116,10 @@ int main(int argc, char *argv[])
     long long energy_total;
     cudaEvent_t time_start, time_stop;
     float time_total;
-    unsigned int memClock;
-    unsigned int ClockFreqNumber=200;
-    unsigned int ClockFreqs[200];
     nvmlInit();
     cudaEventCreate(&time_start);
     cudaEventCreate(&time_stop);
     nvmlDeviceGetHandleByIndex(0, &device_handle);
-    nvmlDeviceGetApplicationsClock(device_handle, NVML_CLOCK_MEM, &memClock);
-    printf("Memory clock is %d\n",memClock);
-    nvmlDeviceGetSupportedGraphicsClocks(device_handle, memClock, &ClockFreqNumber, ClockFreqs );
 
     // run and profile code on device
     for (int i = 0; i < 5; i++) {
@@ -137,8 +131,8 @@ int main(int argc, char *argv[])
 
         cudaEventRecord(time_stop, 0);
         cudaEventSynchronize(time_stop);
-        cudaEventElapsedTime(&time_total, time_start, time_stop);
         nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_end);
+        cudaEventElapsedTime(&time_total, time_start, time_stop);
         CHECK_LAST_CUDA_ERROR();
         energy_total=energy_end-energy_start;
         printf("Param=%d,Time=%f [ms],Energy=%lld [mJ]\n",log_msm_size,time_total, energy_total);
