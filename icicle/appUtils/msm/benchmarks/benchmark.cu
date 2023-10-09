@@ -68,7 +68,7 @@ tuple<scalar_t*, affine_t*> readData(unsigned N) {
 int main(int argc, char *argv[])
 {
     unsigned int batch_size = 1;
-    unsigned int large_bucket_factor = 20; // FIXME: runtime errors for some values of this hyperparam
+    unsigned int large_bucket_factor = 10; // FIXME: runtime errors for some values of this hyperparam
     unsigned int log_msm_size = atoi(argv[1]);
     unsigned int msm_size = 1 << log_msm_size;
     unsigned N = batch_size * msm_size;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     nvmlDeviceGetHandleByIndex(0, &device_handle);
 
     // run and profile code on device
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         cudaEventRecord(time_start, 0);
         nvmlDeviceGetTotalEnergyConsumption(device_handle,&energy_start);
 
@@ -138,6 +138,4 @@ int main(int argc, char *argv[])
         printf("Param=%d,Time=%f [ms],Energy=%lld [mJ]\n",log_msm_size,time_total, energy_total);
     }
     nvmlShutdown();
-    //cudaMemcpy(out, out_d, sizeof(projective_t), cudaMemcpyDeviceToHost);
-    //std::cout << projective_t::to_affine(out[0]) << std::endl;
 }
